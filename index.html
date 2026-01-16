@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirigiendo - FinancePro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 500px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .spinner {
+            margin: 2rem auto;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">💎</div>
+        <h1>FinancePro</h1>
+        <div class="spinner"></div>
+        <p>Procesando tu solicitud...</p>
+        <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.7;">
+            Serás redirigido automáticamente
+        </p>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN
+        const STREAMLIT_APP_URL = 'https://finance-cloud-ypzz4p5ezhnja3ns8cexek.streamlit.app';
+        
+        // Función principal
+        function processRedirect() {
+            try {
+                // 1. Obtener hash de la URL (#access_token=...&refresh_token=...&type=recovery)
+                const hash = window.location.hash.substring(1); // Quita el #
+                
+                console.log('Hash recibido:', hash);
+                
+                // 2. Verificar que hay datos
+                if (!hash) {
+                    console.warn('No se encontró hash en la URL');
+                    redirectToApp();
+                    return;
+                }
+                
+                // 3. Parsear el hash a objeto
+                const params = {};
+                hash.split('&').forEach(param => {
+                    const [key, value] = param.split('=');
+                    if (key && value) {
+                        params[key] = decodeURIComponent(value);
+                    }
+                });
+                
+                console.log('Parámetros parseados:', params);
+                
+                // 4. Verificar que tenemos los tokens
+                if (params.access_token && params.refresh_token) {
+                    // 5. Construir nueva URL con query params
+                    const queryString = new URLSearchParams(params).toString();
+                    const newUrl = `${STREAMLIT_APP_URL}?${queryString}`;
+                    
+                    console.log('Redirigiendo a:', newUrl);
+                    
+                    // 6. Redirigir (replace para que no quede en historial)
+                    window.location.replace(newUrl);
+                } else {
+                    console.error('Tokens no encontrados en hash');
+                    redirectToApp();
+                }
+                
+            } catch (error) {
+                console.error('Error procesando redirect:', error);
+                redirectToApp();
+            }
+        }
+        
+        // Fallback: redirigir a la app sin parámetros
+        function redirectToApp() {
+            setTimeout(() => {
+                window.location.replace(STREAMLIT_APP_URL);
+            }, 2000);
+        }
+        
+        // Ejecutar al cargar la página
+        window.addEventListener('load', processRedirect);
+        
+        // Fallback adicional por si nada funciona (15 segundos)
+        setTimeout(() => {
+            if (window.location.href.includes('github.io')) {
+                console.warn('Timeout: Redirigiendo por seguridad');
+                redirectToApp();
+            }
+        }, 15000);
+    </script>
+</body>
+</html>
